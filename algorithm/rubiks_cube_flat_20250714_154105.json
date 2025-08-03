@@ -1,0 +1,124 @@
+{
+  "timestamp": "20250714_154105",
+  "cube": {
+    "U": [
+      [
+        "GREEN",
+        "BLUE",
+        "GREEN"
+      ],
+      [
+        "BLUE",
+        "GREEN",
+        "BLUE"
+      ],
+      [
+        "GREEN",
+        "BLUE",
+        "GREEN"
+      ]
+    ],
+    "F": [
+      [
+        "YELLOW",
+        "WHITE",
+        "YELLOW"
+      ],
+      [
+        "YELLOW",
+        "WHITE",
+        "YELLOW"
+      ],
+      [
+        "YELLOW",
+        "WHITE",
+        "YELLOW"
+      ]
+    ],
+    "R": [
+      [
+        "ORANGE",
+        "RED",
+        "ORANGE"
+      ],
+      [
+        "ORANGE",
+        "RED",
+        "ORANGE"
+      ],
+      [
+        "ORANGE",
+        "RED",
+        "ORANGE"
+      ]
+    ],
+    "L": [
+      [
+        "RED",
+        "ORANGE",
+        "RED"
+      ],
+      [
+        "RED",
+        "ORANGE",
+        "RED"
+      ],
+      [
+        "RED",
+        "ORANGE",
+        "RED"
+      ]
+    ],
+    "B": [
+      [
+        "WHITE",
+        "YELLOW",
+        "WHITE"
+      ],
+      [
+        "WHITE",
+        "YELLOW",
+        "WHITE"
+      ],
+      [
+        "WHITE",
+        "YELLOW",
+        "WHITE"
+      ]
+    ],
+    "D": [
+      [
+        "BLUE",
+        "GREEN",
+        "BLUE"
+      ],
+      [
+        "GREEN",
+        "BLUE",
+        "GREEN"
+      ],
+      [
+        "BLUE",
+        "GREEN",
+        "BLUE"
+      ]
+    ]
+  },
+  "format": "3x3 grid per face",
+  "faces": [
+    "U",
+    "F",
+    "R",
+    "L",
+    "B",
+    "D"
+  ],
+  "face_descriptions": {
+    "U": "Up face",
+    "F": "Front face",
+    "R": "Right face",
+    "L": "Left face",
+    "B": "Back face",
+    "D": "Down face"
+  }
+}
