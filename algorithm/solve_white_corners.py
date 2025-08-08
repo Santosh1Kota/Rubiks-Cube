@@ -285,9 +285,3 @@ def solve_all_corners(cube):
     solve_white_corner(cube, "BLUE", "ORANGE", "WHITE")
     solve_white_corner(cube, "RED", "BLUE", "WHITE")
     solve_white_corner(cube, "GREEN", "ORANGE", "WHITE")
-
-
-
-
-
-

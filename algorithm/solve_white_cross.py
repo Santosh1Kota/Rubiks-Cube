@@ -126,9 +126,11 @@ def solve_cubie(cube, color1, color2):
     elif (info['face1'] in listofMid and info['face2'] in listofMid):
         if info['face1'] == color2face.get(color1):
             if info['position1'] == (1,0):
-                control, none = cube.get_face_to_move_from_color_2(info['face1'], True)
+                control, none = cube.get_face_to_move_from_color_2(info['face1'], False)
                 print("arey18")
+                print(control,none)
                 run_control(cube, control,none)
+                controls.print_moves()
             elif info['position1'] == (1,2):
                 control, none = cube.get_face_to_move_from_color_2(info['face1'], False)
                 print("arey19")
@@ -139,6 +141,12 @@ def solve_cubie(cube, color1, color2):
                 run_control(cube, control, none)  # clockwise setup
                 controls.B(cube)  # extract (direction doesn't matter for now)
                 run_control(cube, control, "counterclockwise")  # undo with opposite
+            elif info['position1'] == (0,1):
+                cube.visualize()
+                #raise ValueError("Invalid position for edge in middle layer")
+                control, none = cube.get_face_to_move_from_color_2(info['face1'], True)
+                run_control(cube, control, "counterclockwise")
+
             else:
                 raise ValueError("Invalid position for edge in middle layer")
         else:
@@ -273,6 +281,6 @@ def solve_all_edges(cube):
     controls.print_moves()
     solve_cubie(cube, "WHITE", "BLUE")
     controls.print_moves()
-    solve_cubie(cube, "WHITE", "GREEN")
     solve_cubie(cube, "WHITE", "RED")
     solve_cubie(cube, "WHITE", "ORANGE")
+    solve_cubie(cube, "WHITE", "GREEN")

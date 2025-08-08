@@ -186,8 +186,8 @@ class RubiksCube:
             white_color = color2
             other_color = color1
         else:
-            # This function currently only handles white cross edges
-            return False
+            # For middle layer edges, use the middle layer checker
+            return self.is_middle_edge_in_correct_position(color1, color2)
         
         # Find which face has the other_color as its center
         target_face = None
@@ -235,6 +235,47 @@ class RubiksCube:
             return (color_on_face1 == white_color and color_on_face2 == other_color)
         elif face1 == target_face and face2 == white_face:
             return (color_on_face1 == other_color and color_on_face2 == white_color)
+        else:
+            return False
+
+    def is_middle_edge_in_correct_position(self, color1, color2):
+        """Checks if a middle layer edge is in the correct position."""
+        # Use the same color mapping as in solve_middle_layer.py
+        color2face = {"RED": "R", "YELLOW": "B", "ORANGE": "L", "GREEN": "D", "BLUE": "U", "WHITE": "F"}
+        
+        # Find which faces have these colors
+        face1 = color2face.get(color1)
+        face2 = color2face.get(color2)
+        
+        if face1 is None or face2 is None:
+            return False
+        
+        # Middle layer edge positions (excluding WHITE-F and YELLOW-B faces)
+        middle_edge_map = {
+            ('U', 'R'): ('U', 1, 2, 'R', 0, 1),  # U-R edge (BLUE-RED)
+            ('U', 'L'): ('U', 1, 0, 'L', 0, 1),  # U-L edge (BLUE-ORANGE)  
+            ('L', 'D'): ('L', 2, 1, 'D', 1, 0),  # L-D edge (ORANGE-GREEN)
+            ('R', 'D'): ('R', 2, 1, 'D', 1, 2),  # R-D edge (RED-GREEN)
+        }
+        
+        # Find the edge between face1 and face2
+        edge_key = (face1, face2) if (face1, face2) in middle_edge_map else (face2, face1)
+        
+        if edge_key not in middle_edge_map:
+            return False
+        
+        # Get the correct edge position
+        f1, r1, c1, f2, r2, c2 = middle_edge_map[edge_key]
+        
+        # Check if colors are in correct positions
+        color_on_f1 = self.faces[f1][r1][c1]
+        color_on_f2 = self.faces[f2][r2][c2]
+        
+        # Check both orientations
+        if f1 == face1 and f2 == face2:
+            return (color_on_f1 == color1 and color_on_f2 == color2)
+        elif f1 == face2 and f2 == face1:
+            return (color_on_f1 == color2 and color_on_f2 == color1)
         else:
             return False
 
@@ -323,6 +364,59 @@ class RubiksCube:
                 }        
         # If no edge found with those colors
         return None
+
+    def get_edge_from_position(self, face, position):
+        """Given a face and position, find the edge and return its information."""
+        # Define all 12 edge pieces with their positions on adjacent faces
+        edges = [
+            # Format: (face1, row1, col1, face2, row2, col2)
+            ('U', 2, 1, 'F', 0, 1),  # U-F edge
+            ('U', 1, 2, 'R', 0, 1),  # U-R edge  
+            ('U', 0, 1, 'B', 0, 1),  # U-B edge
+            ('U', 1, 0, 'L', 0, 1),  # U-L edge
+            ('F', 1, 2, 'R', 1, 0),  # F-R edge
+            ('F', 2, 1, 'D', 0, 1),  # F-D edge
+            ('F', 1, 0, 'L', 1, 2),  # F-L edge
+            ('R', 1, 2, 'B', 1, 0),  # R-B edge
+            ('R', 2, 1, 'D', 1, 2),  # R-D edge
+            ('B', 1, 2, 'L', 1, 0),  # B-L edge
+            ('B', 2, 1, 'D', 2, 1),  # B-D edge
+            ('L', 2, 1, 'D', 1, 0),  # L-D edge
+        ]
+        
+        row, col = position
+        
+        # Find the edge that contains this face and position
+        for edge in edges:
+            f1, r1, c1, f2, r2, c2 = edge
+            if f1 == face and r1 == row and c1 == col:
+                # Found it! Get colors from both sides
+                color1 = self.faces[f1][r1][c1]
+                color2 = self.faces[f2][r2][c2]
+                
+                # Ensure YELLOW is always first if present
+                if color2 == "YELLOW" and color1 != "YELLOW":
+                    color1, color2 = color2, color1
+                
+                # Use find_edge_with_colors to get full info
+                return self.find_edge_with_colors(color1, color2)
+            elif f2 == face and r2 == row and c2 == col:
+                # Found it on the second side! Get colors from both sides
+                color1 = self.faces[f1][r1][c1]
+                color2 = self.faces[f2][r2][c2]
+                
+                # Ensure YELLOW is always first if present
+                if color1 == "YELLOW" and color2 != "YELLOW":
+                    # Keep as is - color1 is already YELLOW
+                    pass
+                elif color2 == "YELLOW" and color1 != "YELLOW":
+                    color1, color2 = color2, color1
+                
+                # Use find_edge_with_colors to get full info
+                return self.find_edge_with_colors(color1, color2)
+        
+        # Position not found in any edge
+        return None
     
 
 
@@ -370,6 +464,59 @@ class RubiksCube:
                                     mapping[color2][0], mapping[color2][1],
                                     mapping[color3][0], mapping[color3][1])
                 }
+        return None
+
+    def get_corner_from_position(self, face, position):
+        """Given a face and position, find the corner and return its information.
+        If YELLOW is present, it will always be returned as color3/face3/position3."""
+        
+        # All 8 corners with their 3 face positions
+        corners = [
+            ('U', 0, 0, 'L', 0, 0, 'B', 0, 2),
+            ('U', 0, 2, 'B', 0, 0, 'R', 0, 2),
+            ('U', 2, 0, 'F', 0, 0, 'L', 0, 2),
+            ('U', 2, 2, 'R', 0, 0, 'F', 0, 2),
+            ('D', 0, 0, 'L', 2, 2, 'F', 2, 0),
+            ('D', 0, 2, 'F', 2, 2, 'R', 2, 0),
+            ('D', 2, 0, 'B', 2, 2, 'L', 2, 0),
+            ('D', 2, 2, 'R', 2, 2, 'B', 2, 0),
+        ]
+        
+        row, col = position
+        
+        for corner in corners:
+            f1, r1, c1, f2, r2, c2, f3, r3, c3 = corner
+            
+            # Check if the input face/position matches any of the 3 positions in this corner
+            if f1 == face and r1 == row and c1 == col:
+                # Get all 3 colors
+                color1 = self.faces[f1][r1][c1]  # color from input position
+                color2 = self.faces[f2][r2][c2]  # color from second position
+                color3 = self.faces[f3][r3][c3]  # color from third position
+                
+            elif f2 == face and r2 == row and c2 == col:
+                # Get all 3 colors
+                color1 = self.faces[f2][r2][c2]  # color from input position
+                color2 = self.faces[f1][r1][c1]  # color from first position
+                color3 = self.faces[f3][r3][c3]  # color from third position
+                
+            elif f3 == face and r3 == row and c3 == col:
+                # Get all 3 colors
+                color1 = self.faces[f3][r3][c3]  # color from input position
+                color2 = self.faces[f1][r1][c1]  # color from first position
+                color3 = self.faces[f2][r2][c2]  # color from second position
+                
+            else:
+                continue  # This corner doesn't contain the input position
+            
+            # Arrange colors so YELLOW is always last (color3) if present
+            colors = [color1, color2, color3]
+            if "YELLOW" in colors:
+                colors.remove("YELLOW")
+                colors.append("YELLOW")  # YELLOW becomes last
+            
+            return self.find_corner_with_colors(colors[0], colors[1], colors[2])
+        
         return None
 
 
