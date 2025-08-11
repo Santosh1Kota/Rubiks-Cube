@@ -1,5 +1,73 @@
 # Global list to track all moves made
 moves_made = []
+# Separate list for unfiltered/raw moves (for debugging)
+moves = []
+
+def add_move(move):
+    """Add a move to the moves_made list with optimizations"""
+    moves.append(move)  # Keep raw unfiltered moves for debugging
+    
+    # Check if last move would be opposite of the current last move
+    if len(moves_made) >= 1:
+        # Map moves to their opposites
+        opposite_moves = {
+            "F": "F'", "F'": "F",
+            "B": "B'", "B'": "B", 
+            "U": "U'", "U'": "U",
+            "D": "D'", "D'": "D",
+            "L": "L'", "L'": "L", 
+            "R": "R'", "R'": "R"
+        }
+        
+        # If the new move is opposite of the last move, remove the last move instead of adding
+            
+        if moves[-1] == "B" or moves[-1] == "B'":
+            if opposite_moves.get(add_move) == move:
+                print("oppoos")
+                print(moves_made[-1],move)
+                print(moves_made)
+
+                moves_made.pop()  # Remove last move
+                return  # Exit early, no need for other optimizations
+    
+    # Check if adding this move would make 4 identical moves (360° = no change)
+    if len(moves_made) >= 3 and moves_made[-1] == moves_made[-2] == moves_made[-3] == move:
+        print("3 identical")
+        print(moves_made[-1],moves_made[-2],moves_made[-3],move)
+        # Remove the last 3 identical moves instead of adding the 4th
+        moves_made.pop()
+        moves_made.pop()
+        moves_made.pop()
+        return  # Exit early, no need to check for 3-move optimization
+    
+    # Check if adding this move would make 3 identical moves (can be optimized to opposite)
+    if len(moves_made) >= 2 and moves_made[-1] == moves_made[-2] == move:
+        print_moves()
+        print("2 identical")
+        print(moves_made[-1],moves_made[-2],move)
+        # Remove the last 2 identical moves
+        moves_made.pop()
+        moves_made.pop()
+        
+        # Map moves to their opposites
+        opposite_moves = {
+            "F": "F'", "F'": "F",
+            "B": "B'", "B'": "B", 
+            "U": "U'", "U'": "U",
+            "D": "D'", "D'": "D",
+            "L": "L'", "L'": "L", 
+            "R": "R'", "R'": "R"
+        }
+        
+        # Add the opposite move instead
+        opposite = opposite_moves.get(move)
+        print("opposite",opposite)
+        moves_made.append(opposite)
+        return
+    
+    # If no optimizations applied, add the move normally
+    moves_made.append(move)
+
 
 def print_moves():
     """Print all moves made so far"""
@@ -13,9 +81,10 @@ def rotate_face_counterclockwise(face_grid):
     """Rotate a 3x3 face 90 degrees counterclockwise."""
     return [[face_grid[j][2-i] for j in range(3)] for i in range(3)]
 
-def F(cube):
+def F(cube, do_not_append: bool = False):
     """F move: Front face clockwise (z = 1, dir = -1 in Processing)"""
-    moves_made.append("F")
+    if not do_not_append:
+        add_move("F")
     # Rotate the F face itself clockwise
     cube.faces['F'] = rotate_face_counterclockwise(cube.faces['F'])
     temp1 = []
@@ -38,9 +107,10 @@ def F(cube):
         cube.faces['U'][2][i] = temp1[i]
 
 
-def F_prime(cube):
+def F_prime(cube, do_not_append: bool = False):
     """F' move: Front face counterclockwise (z = 1, dir = 1 in Processing)"""
-    moves_made.append("F'")
+    if not do_not_append:
+        add_move("F'")
     # Rotate the F face itself clockwise (opposite of F)
     cube.faces['F'] = rotate_face_clockwise(cube.faces['F'])
     
@@ -67,9 +137,10 @@ def F_prime(cube):
     for i in range(3):
         cube.faces['U'][2][i] = temp1[2-i]  # U bottom row <- L right column (saved)
 
-def B(cube):
+def B(cube, do_not_append: bool = False):
     """B move: Back face clockwise (z = -1, dir = 1 in Processing)"""
-    moves_made.append("B")
+    if not do_not_append:
+        add_move("B")
     # Rotate the B face itself clockwise
     cube.faces['B'] = rotate_face_counterclockwise(cube.faces['B'])
     
@@ -96,9 +167,10 @@ def B(cube):
         cube.faces['U'][0][i] = temp1[2-i]  # U bottom row <- L right column (saved)
 
 
-def B_prime(cube):
+def B_prime(cube, do_not_append: bool = False):
     """B' move: Back face counterclockwise (z = -1, dir = -1 in Processing)"""
-    moves_made.append("B'")
+    if not do_not_append:
+        add_move("B'")
     # Rotate the B face itself counterclockwise
     cube.faces['B'] = rotate_face_clockwise(cube.faces['B'])
     temp1 = []
@@ -120,9 +192,10 @@ def B_prime(cube):
     for i in range(3):
         cube.faces['U'][0][i] = temp1[i]
 
-def U(cube):
+def U(cube, do_not_append: bool = False):
     """U move: Up face clockwise (x = -1, dir = 1 in Processing)"""
-    moves_made.append("U")
+    if not do_not_append:
+        add_move("U")
     # Rotate the U face itself clockwise
     cube.faces['L'] = rotate_face_counterclockwise(cube.faces['L'])
     temp1 = []
@@ -144,9 +217,10 @@ def U(cube):
     for i in range(3):
         cube.faces['U'][i][0] = temp1[i]
 
-def U_prime(cube):
+def U_prime(cube, do_not_append: bool = False):
     """U' move: Up face counterclockwise (x = -1, dir = -1 in Processing)"""
-    moves_made.append("U'")
+    if not do_not_append:
+        add_move("U'")
     # Rotate the U face itself counterclockwise
     cube.faces['L'] = rotate_face_clockwise(cube.faces['L'])
     temp1 = []
@@ -168,9 +242,10 @@ def U_prime(cube):
     for i in range(3):
         cube.faces['D'][i][0] = temp1[i]
 
-def D(cube):
+def D(cube, do_not_append: bool = False):
     """D move: Down face clockwise (x = 1, dir = -1 in Processing)"""
-    moves_made.append("D")
+    if not do_not_append:
+        add_move("D")
     # Rotate the D face itself clockwise
     cube.faces['R'] = rotate_face_counterclockwise(cube.faces['R'])
     temp1 = []
@@ -193,9 +268,10 @@ def D(cube):
         cube.faces['D'][i][2] = temp1[i]
     
 
-def D_prime(cube):
+def D_prime(cube, do_not_append: bool = False):
     """D' move: Down face counterclockwise (x = 1, dir = 1 in Processing)"""
-    moves_made.append("D'")
+    if not do_not_append:
+        add_move("D'")
     # Rotate the D face itself counterclockwise
     cube.faces['R'] = rotate_face_clockwise(cube.faces['R'])
     temp1 = []
@@ -218,9 +294,10 @@ def D_prime(cube):
         cube.faces['U'][i][2] = temp1[i]
     
 
-def L(cube):
+def L(cube, do_not_append: bool = False):
     """L move: Left face clockwise (y = 1, dir = 1 in Processing)"""
-    moves_made.append("L")
+    if not do_not_append:
+        add_move("L")
     # Rotate the L face itself clockwise
     cube.faces['D'] = rotate_face_counterclockwise(cube.faces['D'])
     temp1 = cube.faces['B'][2].copy()
@@ -233,9 +310,10 @@ def L(cube):
 
     
 
-def L_prime(cube):
+def L_prime(cube, do_not_append: bool = False):
     """L' move: Left face counterclockwise (y = 1, dir = -1 in Processing)"""
-    moves_made.append("L'")
+    if not do_not_append:
+        add_move("L'")
     # Rotate the L face itself counterclockwise
     cube.faces['D'] = rotate_face_clockwise(cube.faces['D'])
     temp1 = cube.faces['B'][2].copy()
@@ -248,9 +326,10 @@ def L_prime(cube):
 
     
 
-def R(cube):
+def R(cube, do_not_append: bool = False):
     """R move: Right face clockwise (y = -1, dir = -1 in Processing)"""
-    moves_made.append("R")
+    if not do_not_append:
+        add_move("R")
     # Rotate the R face itself clockwise
     cube.faces['U'] = rotate_face_counterclockwise(cube.faces['U'])
     temp1 = cube.faces['B'][0].copy()
@@ -262,9 +341,10 @@ def R(cube):
     cube.faces['R'][0] = temp1
     print("RAN R")
 
-def R_prime(cube):
+def R_prime(cube, do_not_append: bool = False):
     """R' move: Right face counterclockwise (y = -1, dir = 1 in Processing)"""
-    moves_made.append("R'")
+    if not do_not_append:
+        add_move("R'")
     # Rotate the R face itself counterclockwise
     cube.faces['U'] = rotate_face_clockwise(cube.faces['U'])
     temp1 = cube.faces['B'][0].copy()

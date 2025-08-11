@@ -2,39 +2,46 @@ import algorithm
 import controls
 
 #START OF FUNCTIONS
-def run_control(cube, control, direction):
+def run_control(cube, control, direction, do_not_append: bool = False):
+    # Determine prime vs non-prime based on direction semantics used in this module
+    is_prime = not (direction == "counterclockwise" or direction == "")
+    move_str = f"{control}'" if is_prime else control
+
     if control == "U" :
-        if direction == "counterclockwise" or direction =="":
-            controls.U(cube)
+        if not is_prime:
+            controls.U(cube, do_not_append=do_not_append)
         else:
-            controls.U_prime(cube)
+            controls.U_prime(cube, do_not_append=do_not_append)
     elif control == "D":
-        if direction == "counterclockwise" or direction =="":
-            controls.D(cube)
+        if not is_prime:
+            controls.D(cube, do_not_append=do_not_append)
         else:
-            controls.D_prime(cube)
+            controls.D_prime(cube, do_not_append=do_not_append)
     elif control == "L":
-        if direction == "counterclockwise" or direction =="":
-            controls.L(cube)
+        if not is_prime:
+            controls.L(cube, do_not_append=do_not_append)
         else:
-            controls.L_prime(cube)
+            controls.L_prime(cube, do_not_append=do_not_append)
     elif control == "R":
-        if direction == "counterclockwise" or direction =="":
-            controls.R(cube)
+        if not is_prime:
+            controls.R(cube, do_not_append=do_not_append)
         else:
-            controls.R_prime(cube)
+            controls.R_prime(cube, do_not_append=do_not_append)
     elif control == "B":
-        if direction == "counterclockwise" or direction =="":
-            controls.B(cube)
+        if not is_prime:
+            controls.B(cube, do_not_append=do_not_append)
         else:
-            controls.B_prime(cube)
+            controls.B_prime(cube, do_not_append=do_not_append)
     elif control == "F":
-        if direction == "counterclockwise" or direction =="":
-            controls.F(cube)
+        if not is_prime:
+            controls.F(cube, do_not_append=do_not_append)
         else:
-            controls.F_prime(cube)
+            controls.F_prime(cube, do_not_append=do_not_append)
     else:
         raise ValueError("Invalid control in run_control")
+
+    if do_not_append:
+        return move_str
             
 # Example: Find an edge
 def solve_cubie(cube, color1, color2):
@@ -176,25 +183,31 @@ def solve_cubie(cube, color1, color2):
                     
                     control, none = cube.get_face_to_move_from_color_2(info['face1'], True)
                     print("arey10")
-                    run_control(cube, control,none)
-                    controls.B(cube)
-                    run_control(cube, control, "clockwise")
+                    size = len(controls.moves_made)
+                    temp_moves = []
+                    temp_moves.append(run_control(cube, control,none, do_not_append=True))
+                    temp_moves.append(run_control(cube, "B", "", do_not_append=True))
+                    temp_moves.append(run_control(cube, control, "clockwise", do_not_append=True))
                     info2 = cube.find_edge_with_colors(color1, color2)
                     if info['edge_info'] == info2['edge_info']:
-                        run_control(cube, control, "counterclockwise")
-                        controls.B_prime(cube)
-                        run_control(cube, control, "clockwise")
-                        controls.moves_made.pop()
-                        controls.moves_made.pop() 
-                        controls.moves_made.pop()
-                        controls.moves_made.pop()
-                        controls.moves_made.pop()
-                        controls.moves_made.pop()
+                        print("hiter")
+                        temp_moves.append(run_control(cube, control, "counterclockwise", do_not_append=True))
+                        temp_moves.append(run_control(cube, "B", "clockwise", do_not_append=True))
+                        temp_moves.append(run_control(cube, control, "clockwise", do_not_append=True))
+                        for move in temp_moves:
+                            if move is not None:
+                                controls.moves.append(move)
+                                controls.moves_made.append(move)
                         run_control(cube, control,"clockwise")
                         controls.B(cube)
                         run_control(cube, control, "counterclockwise")
                         controls.print_moves()
                         print("duh")
+                    else:
+                        for move in temp_moves:
+                            if move is not None:
+                                controls.moves.append(move)
+                                controls.moves_made.append(move)
 
                     controls.print_moves()
                 else:
@@ -219,6 +232,7 @@ def solve_cubie(cube, color1, color2):
                     run_control(cube, control,"counterclockwise")
                 elif info['position2'] == (2,1):
                     control, none = cube.get_face_to_move_from_color_2(info['face2'], True)  # Like (1,0), not (1,2)
+                    size = len(controls.moves_made)
                     print("arey13")
                     run_control(cube, control, none)
                     controls.B(cube)
@@ -229,12 +243,9 @@ def solve_cubie(cube, color1, color2):
                         run_control(cube, control, "counterclockwise")
                         controls.B_prime(cube)
                         run_control(cube, control, "clockwise")
-                        controls.moves_made.pop()
-                        controls.moves_made.pop() 
-                        controls.moves_made.pop()
-                        controls.moves_made.pop()
-                        controls.moves_made.pop()
-                        controls.moves_made.pop()
+                        while(len(controls.moves_made) > size):
+                            print("poppy2")
+                            controls.moves_made.pop()
                         run_control(cube, control,"clockwise")
                         controls.B(cube)
                         run_control(cube, control, "counterclockwise")

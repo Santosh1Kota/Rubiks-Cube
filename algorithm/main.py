@@ -18,7 +18,7 @@ print("="*60)
 print("\nInitial cube state:")
 cube.visualize()
 #SCRAMBLE
-controls.D_prime(cube); controls.L(cube); controls.B_prime(cube); controls.R(cube); controls.U(cube); controls.F_prime(cube); controls.D(cube); controls.R_prime(cube); controls.B(cube); controls.L_prime(cube); controls.F(cube); controls.U_prime(cube); controls.R(cube); controls.B_prime(cube); controls.D_prime(cube);
+controls.R(cube); controls.U(cube); controls.R_prime(cube); controls.U_prime(cube); controls.F(cube); controls.D(cube); controls.L(cube); controls.B_prime(cube); controls.U(cube); controls.L_prime(cube); controls.F_prime(cube); controls.D_prime(cube); controls.R(cube); controls.B(cube); controls.U_prime(cube); controls.F(cube); controls.L(cube); controls.D(cube); controls.R_prime(cube); controls.B_prime(cube);
 print("\nScrambled cube:")
 cube.visualize()
 
@@ -81,7 +81,15 @@ cube.visualize()
 controls.print_moves()
 solve_middle_layer.solve_all_middle_edges(cube)
 print("yellow face")
+if not cube.is_middle_edges_solved():
+    print("Middle edges not solved")
+    raise ValueError("Middle edges not solved")
 solve_yellow_face.solve_all_yellow_face(cube)
+if not cube.is_yellow_face_solved():
+    #exit()
+    # print("Yellow face not solved")
+    raise ValueError("Yellow face not solved")
+ 
 controls.print_moves()
 print(" ".join(controls.moves_made))
 print(f"Total moves: {len(controls.moves_made)}")
@@ -112,6 +120,9 @@ print("If this doesn't match your visualizer, check:")
 print("1. Move notation format (F' vs Fi vs F3)")
 print("2. Starting cube orientation")
 print("3. Color-to-face mapping")
+print("="*60+"\n")
 print("="*60)
 cube.visualize()
 solve_last.solve(cube)
+cube.visualize()
+print(f"Total moves: {len(controls.moves_made)}")

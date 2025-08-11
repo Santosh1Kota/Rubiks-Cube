@@ -36,6 +36,16 @@ def run_control(cube, control, direction):
         raise ValueError("Invalid control in run_control")
 
 def solve_yellow(cube):
+    all_positions = [(0,0), (0,1), (0,2), (1,0), (1,1), (1,2), (2,0), (2,1), (2,2)]
+    yellow_count = 0
+    for pos in all_positions:
+        if cube.faces['B'][pos[0]][pos[1]] == "YELLOW":
+            yellow_count += 1
+    
+    if yellow_count == 9:
+        print("🎉 Yellow face completely solved!")
+        return
+    
     # Edge positions on face B
     edge_positions = [(0,1), (1,0), (1,2), (2,1)]  # top, left, right, bottom
     
@@ -56,6 +66,18 @@ def solve_yellow(cube):
     
     print(f"Yellow edges found: {len(yellow_edges)} at positions {yellow_edges}")
     print(f"Yellow corners found: {len(yellow_corners)} at positions {yellow_corners}")
+    
+    # Helper to refresh local yellow positions
+    def get_yellow_positions(c):
+        edge_positions = [(0,1), (1,0), (1,2), (2,1)]
+        corner_positions = [(0,0), (0,2), (2,0), (2,2)]
+        edges = [p for p in edge_positions if c.faces['B'][p[0]][p[1]] == "YELLOW"]
+        corners = [p for p in corner_positions if c.faces['B'][p[0]][p[1]] == "YELLOW"]
+        return edges, corners
+    if len(yellow_edges)==0:
+        side_algorithm(cube)
+        yellow_edges, yellow_corners = get_yellow_positions(cube)
+        solve_yellow(cube)
     if len(yellow_edges)==4 and len(yellow_corners)==0:
         count =0
         while not cube.faces['R'][2][2] == "YELLOW":
@@ -63,45 +85,23 @@ def solve_yellow(cube):
             count+=1
             if count == 4:
                 success = main_algorithm(cube,"D")
-                edge_count, corner_count = count_yellow_pieces(cube)
-                print(f"After main_algorithm: {edge_count} edges, {corner_count} corners")
+                yellow_edges, yellow_corners = get_yellow_positions(cube)
                 if success:
-                    print("🎉 Algorithm succeeded, stopping execution!")
                     return
-                print("could not find yellow edge on R")
                 break
         if cube.faces['R'][2][2] == "YELLOW":
-            print("found yellow edge on R")
             success = main_algorithm(cube,"D")
-            edge_count, corner_count = count_yellow_pieces(cube)
-            print(f"After main_algorithm: {edge_count} edges, {corner_count} corners")
+            yellow_edges, yellow_corners = get_yellow_positions(cube)
             if success:
-                print("🎉 Algorithm succeeded, stopping execution!")
                 return
 
     '''
-    ============================================================
-         RUBIK'S CUBE - 2D UNFOLDED VIEW
-============================================================
-
-                           [ U ]
-                              GREEN   YELLOW    GREEN
-                               BLUE     BLUE     BLUE
-                               BLUE     BLUE     BLUE
-
-[ L ] [ F ] [ R ] [ B ]
-  YELLOW   ORANGE   ORANGE    WHITE    WHITE    WHITE      RED      RED   YELLOW      RED    GREEN   ORANGE
-  YELLOW   ORANGE   ORANGE    WHITE    WHITE    WHITE      RED      RED      RED   YELLOW   YELLOW     BLUE
-    BLUE   ORANGE   ORANGE    WHITE    WHITE    WHITE      RED      RED     BLUE   YELLOW   YELLOW   YELLOW
-
-                           [ D ]
-                              GREEN    GREEN    GREEN
-                              GREEN    GREEN    GREEN
-                             ORANGE   ORANGE      RED
-    Addt this test case
     '''
-            
+
+
     if len(yellow_corners) == 2 and len(yellow_edges) == 4:
+        print("troy3")
+        cube.visualize()
         print("FOUND 2 YELLOW CORNERS AND 4 YELLOW EDGES")
         corner1 = yellow_corners[0]
         corner2 = yellow_corners[1]
@@ -123,13 +123,12 @@ def solve_yellow(cube):
             while not matches_pattern(cube, 'B', target_pattern):
                 controls.B_prime(cube)
             success = main_algorithm(cube, face_to_use)
-            edge_count, corner_count = count_yellow_pieces(cube)
-            print(f"After main_algorithm: {edge_count} edges, {corner_count} corners")
+            yellow_edges, yellow_corners = get_yellow_positions(cube)
             if success:
-                print("🎉 Algorithm succeeded, stopping execution!")
                 return
         else:
             face_to_use = "D"
+            
             target_pattern = [
                 ['-', 'YELLOW', 'YELLOW'],
                 ['YELLOW', 'YELLOW', 'YELLOW'], 
@@ -137,12 +136,13 @@ def solve_yellow(cube):
             ]
             while not matches_pattern(cube, 'B', target_pattern):
                 controls.B_prime(cube)
+            cube.visualize()
+            print("beforeza",face_to_use)
             success = main_algorithm(cube, face_to_use)
-            edge_count, corner_count = count_yellow_pieces(cube)
-            print(f"After main_algorithm: {edge_count} edges, {corner_count} corners")
-            if success:
-                print("🎉 Algorithm succeeded, stopping execution!")
-                return
+            cube.visualize()
+            print("afterza",face_to_use)
+            yellow_edges, yellow_corners = get_yellow_positions(cube)
+            solve_yellow(cube)
 
         
         
@@ -151,40 +151,47 @@ def solve_yellow(cube):
     # Check for 2 adjacent yellow edges (like in side_algorithm)
     if len(yellow_edges) == 2:
         # Check if the 2 edges are adjacent (using same logic as side_algorithm)
-        possible_adjacent_pairs = [[(0,1),(1,0)], [(0,1),(1,2)], [(1,0),(2,1)], [(1,2),(2,1)]]
-        print("Hfedas")
-        cube.visualize()
+        possible_adjacent_pairs = [((0,1),(1,0)), ((0,1),(1,2)), ((1,0),(2,1)), ((1,2),(2,1))]
+        adjacent_pairs_dict = {
+            ((0,1),(1,0)): "D",
+            ((0,1),(1,2)): "R",
+            ((1,0),(2,1)): "L",
+            ((1,2),(2,1)): "U",
+        }
+        adjacent = False
+        
         for pair in possible_adjacent_pairs:
             if set(pair) == set(yellow_edges):
-                print("Found 2 adjacent yellow edges - calling side_algorithm")
-                print("RUNNING SIDE ALGORITHM")
-                success = side_algorithm(cube)
-                edge_count, corner_count = count_yellow_pieces(cube)
-                print(f"After side_algorithm: {edge_count} edges, {corner_count} corners")
+                adjacent = True
+                success = side_algorithm(cube, adjacent_pairs_dict.get(pair))
+                yellow_edges, yellow_corners = get_yellow_positions(cube)
                 if success:
-                    print("🎉 Algorithm succeeded, stopping execution!")
                     return
-                print("SIDE ALGORITHM COMPLETED")
+                solve_yellow(cube)
                 
         
         # If we get here, the 2 edges are not adjacent
-        print("Found 2 yellow edges but they are not adjacent")
+        if not adjacent:
+            if cube.faces['B'][0][1] =="YELLOW" and cube.faces['B'][2][1] =="YELLOW":
+                side_algorithm(cube, "R")
+                yellow_edges, yellow_corners = get_yellow_positions(cube)
+                solve_yellow(cube)
+            elif cube.faces['B'][1][0] =="YELLOW" and cube.faces['B'][1][2] =="YELLOW":
+                side_algorithm(cube, "U")
+                yellow_edges, yellow_corners = get_yellow_positions(cube)
+                solve_yellow(cube)
+        
     
     # Check for all 4 yellow edges with no yellow corners
     elif len(yellow_edges) == 4 and len(yellow_corners) == 0:
-        print("Found all 4 yellow edges with no yellow corners - calling main_algorithm")
         success = main_algorithm(cube, "R")  # Pass random face "R"
-        edge_count, corner_count = count_yellow_pieces(cube)
-        print(f"After main_algorithm: {edge_count} edges, {corner_count} corners")
+        yellow_edges, yellow_corners = get_yellow_positions(cube)
         if success:
-            print("🎉 Algorithm succeeded, stopping execution!")
             return
-        print("RUN MAIN ALGORITHM WITH RANDOM FACE ")
         
     
     # Check for all 4 yellow edges with exactly 1 yellow corner
     elif len(yellow_edges) == 4 and len(yellow_corners) == 1:
-        print("FOUND 4 YELLOW EDGES WITH 1 YELLOW CORNER")
         position_locator = {(0,2):(0,1), (0,0):(1,0), (2,0):(2,1), (2,2):(1,2)}
         if cube.faces['B'][0][0] == "YELLOW":
             info_corner = cube.get_corner_from_position("B", (0,0))
@@ -200,70 +207,58 @@ def solve_yellow(cube):
             info_edge = cube.get_edge_from_position("B", position_locator.get((2,2)))
         else:
             raise ValueError("No yellow corner found")
-        print("INFO",info_corner)
-        print("INFO",info_edge)
-        cube.visualize()
         opposite_face = {"R":"L","L":"R","U":"D","D":"U"}
         if info_corner['face1'] == info_edge['face2']:
             face_to_use = info_corner['face1']
-            print("FACE TO USE",face_to_use)
-            cube.visualize()
             one_to_use = {"R":(2,2),"U":(0,2),"D":(2,0),"L":(0,0)}
             position_to_use = one_to_use.get(face_to_use)
             if cube.faces[face_to_use][position_to_use[0]][position_to_use[1]] == "YELLOW":
-                print("or1:")
-                cube.visualize()
                 success = main_algorithm(cube, face_to_use)
+                yellow_edges, yellow_corners = get_yellow_positions(cube)
                 if success:
-                    print("🎉 Algorithm succeeded, stopping execution!")
                     return
             else:
-                print("or2:")
-                cube.visualize()
                 success = main_algorithm(cube, face_to_use)
+                yellow_edges, yellow_corners = get_yellow_positions(cube)
                 if success:
-                    print("🎉 Algorithm succeeded, stopping execution!")
                     return
                 success = main_algorithm(cube, opposite_face.get(face_to_use))
+                yellow_edges, yellow_corners = get_yellow_positions(cube)
                 if success:
-                    print("🎉 Algorithm succeeded, stopping execution!")
                     return
             edge_count, corner_count = count_yellow_pieces(cube)
             if edge_count!=3 and corner_count !=3:
                 success = main_algorithm(cube, face_to_use)
+                yellow_edges, yellow_corners = get_yellow_positions(cube)
                 if success:
                     print("🎉 Algorithm succeeded, stopping execution!")
                     return
-            print("AFTER MAIN ALGORITHM")
-            cube.visualize()
-            print(f"After main_algorithm: {edge_count} edges, {corner_count} corners")
+            
         elif info_corner['face2'] == info_edge['face2']:
             face_to_use = info_corner['face2']
             one_to_use = {"R":(2,2),"U":(0,2),"D":(2,0),"L":(0,0)}
             position_to_use = one_to_use.get(face_to_use)
             if cube.faces[face_to_use][position_to_use[0]][position_to_use[1]] == "YELLOW":
-                print("or3:")
                 success = main_algorithm(cube, face_to_use)
+                yellow_edges, yellow_corners = get_yellow_positions(cube)
                 if success:
-                    print("🎉 Algorithm succeeded, stopping execution!")
                     return
             else:
-                print("or4:")
                 success = main_algorithm(cube, face_to_use)
                 if success:
-                    print("🎉 Algorithm succeeded, stopping execution!")
                     return
                 success = main_algorithm(cube, opposite_face.get(face_to_use))
+                yellow_edges, yellow_corners = get_yellow_positions(cube)
                 if success:
-                    print("🎉 Algorithm succeeded, stopping execution!")
                     return
             edge_count, corner_count = count_yellow_pieces(cube)
-            print(f"After main_algorithm: {edge_count} edges, {corner_count} corners")
         else:
             raise ValueError("No matching pattern found")
 
     else:
         print(f"No matching pattern found - {len(yellow_edges)} edges, {len(yellow_corners)} corners")
+        main_algorithm(cube, "R")
+        yellow_edges, yellow_corners = get_yellow_positions(cube)
     
     # Check if yellow face is completely solved (all 9 positions should be yellow)
     all_positions = [(0,0), (0,1), (0,2), (1,0), (1,1), (1,2), (2,0), (2,1), (2,2)]
@@ -274,12 +269,12 @@ def solve_yellow(cube):
     
     if yellow_count == 9:
         print("🎉 Yellow face completely solved!")
+        return
     else:
         print(f"Yellow face not complete ({yellow_count}/9 yellow) - running solve_yellow again...")
         edge_count, corner_count = count_yellow_pieces(cube)
         print(f"After side_algorithm: {edge_count} edges, {corner_count} corners")
-        print("in place of recursion")
-        cube.visualize()
+        #solve_yellow(cube)
     if count_yellow_pieces(cube)[0]+count_yellow_pieces(cube)[1] == 8:
         edge_count, corner_count = count_yellow_pieces(cube)
         total_count = edge_count + corner_count
@@ -289,6 +284,7 @@ def solve_yellow(cube):
         return
     
     # If we get here, total is not 8
+    
     edge_count, corner_count = count_yellow_pieces(cube)
     total_count = edge_count + corner_count
     print(f"🔍 DEBUG: Current count is {edge_count} edges + {corner_count} corners = {total_count} total (not 8)")
@@ -296,9 +292,14 @@ def solve_yellow(cube):
     solve_yellow(cube)  # Recursive call
 
 
-def side_algorithm(cube):
+def side_algorithm(cube, face_to_use = None):
+    if len(controls.moves) > 500:
+        print("TOO MANY MOVES")
+        exit()
+
     #Do algorithm that is not really the main one but the one we use to use before the main one. 
     #We only call this when there is  at least three yellow edges on one side. In the format.
+    print("RUNNING SIDE ALGORITHM")
     color2face = {"RED": "R", "YELLOW": "B", "ORANGE": "L", "GREEN": "D", "BLUE": "U", "WHITE": "F"}
     reverse_on_right = {"D":"L","R":"D","U":"R","L":"U"}
     possible_outcomes = [[(0,1),(1,0)],[(0,1),(1,2)],[(1,0),(2,1)],[(1,2),(2,1)]]
@@ -312,7 +313,8 @@ def side_algorithm(cube):
             # Both positions have YELLOW colors, continue with algorithm
             info1 = cube.get_edge_from_position("B", outcome[0])    
             info2 = cube.get_edge_from_position("B", outcome[1])
-            face_to_use = align_face(cube, info1, info2)
+            if face_to_use is None:
+                face_to_use = align_face(cube, info1, info2)
             #R' B' D' B D R
             control, direction = cube.get_face_to_move_from_color_2(face_to_use, False)
             print(control, direction)
@@ -334,6 +336,9 @@ def side_algorithm(cube):
         face_to_use = random.choice(faces)
         control, direction = cube.get_face_to_move_from_color_2(face_to_use, False)
         print(control, direction)
+        print("before random")
+        cube.visualize()
+        
         run_control(cube, control, direction)
         controls.B_prime(cube)
         control, direction = cube.get_face_to_move_from_color_2(reverse_on_right.get(face_to_use), False)
@@ -343,6 +348,7 @@ def side_algorithm(cube):
         run_control(cube, control, direction)
         control, direction = cube.get_face_to_move_from_color_2(face_to_use, True)
         run_control(cube, control, direction)
+        print("after random")
         cube.visualize()
         controls.print_moves()
     
@@ -359,6 +365,9 @@ def side_algorithm(cube):
 
 
 def main_algorithm(cube, face):
+    if len(controls.moves) > 500:
+        print("TOO MANY MOVES")
+        exit()
     """Main algorithm for yellow face solving"""
     # TODO: Implement main algorithm
     print(f"Running main_algorithm with face: {face}")
@@ -476,34 +485,6 @@ def recognizes_rotated_pattern(cube):
     
     return False, -1
         
-def solve_all_yellow_face(cube):
-    """Solve the entire yellow face (both cross and corners)"""
-    # First solve the yellow cross
-
-    cube.visualize()
-    print("FIRST RUN")
-    solve_yellow(cube)
-    cube.visualize()
-    # cube.visualize()
-    # print("SECOND RUN")
-    # solve_yellow(cube)
-    # cube.visualize()
-    # print("THIRD RUN")
-    #solve_yellow(cube)
-    # cube.visualize()
-    # print("FOURTH RUN")
-
-    #test_pattern_recognition()
-
-
-
-    
-    # Then orient the yellow corners
-    #solve_yellow_corners(cube)
-    
-    #print("Yellow face solving complete!")
-    #controls.print_moves() 
-
 
 def count_yellow_pieces(cube):
     """Count yellow edges and corners on face B and return the counts"""
@@ -526,4 +507,27 @@ def count_yellow_pieces(cube):
             yellow_corners += 1
     
     return yellow_edges, yellow_corners
+
+def solve_all_yellow_face(cube):
+    """Solve the entire yellow face (both cross and corners)"""
+    # First solve the yellow cross
+    print(len(controls.moves))
+    print("ALL HAIL")
+    for i in range(1):
+        cube.visualize()
+        print("After run #",i)
+        solve_yellow(cube)
+        cube.visualize()
+
+
+    #test_pattern_recognition()
+
+
+
+    
+    # Then orient the yellow corners
+    #solve_yellow_corners(cube)
+    
+    #print("Yellow face solving complete!")
+    #controls.print_moves() 
 

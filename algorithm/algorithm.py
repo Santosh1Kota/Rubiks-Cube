@@ -113,6 +113,19 @@ class RubiksCube:
                 print(" ".join(row))
             print()
 
+    def is_solved(self) -> bool:
+        """Return True if the cube is solved: every face is uniform.
+
+        A face is considered solved when all 9 stickers match that face's center color.
+        """
+        for face in ['U', 'F', 'R', 'L', 'B', 'D']:
+            center_color = self.faces[face][1][1]
+            for row in range(3):
+                for col in range(3):
+                    if self.faces[face][row][col] != center_color:
+                        return False
+        return True
+
     
     def visualize(self):
         """
@@ -323,6 +336,27 @@ class RubiksCube:
                    color2face.get(info['color3']) == info['face3']):
                 return False
         
+        return True
+
+    def is_yellow_face_solved(self) -> bool:
+        """Return True if the yellow face (B) is fully yellow (all 9 stickers)."""
+        face_grid = self.faces['B']
+        for row in range(3):
+            for col in range(3):
+                if face_grid[row][col] != "YELLOW":
+                    return False
+        return True
+
+    def is_middle_edges_solved(self) -> bool:
+        """Return True if all four middle-layer edges are in correct positions and orientations.
+
+        Uses the same color-face mapping and validation as is_middle_edge_in_correct_position.
+        Target pairs: (BLUE, RED), (BLUE, ORANGE), (ORANGE, GREEN), (RED, GREEN).
+        """
+        target_pairs = [("BLUE", "RED"), ("BLUE", "ORANGE"), ("ORANGE", "GREEN"), ("RED", "GREEN")]
+        for color1, color2 in target_pairs:
+            if not self.is_middle_edge_in_correct_position(color1, color2):
+                return False
         return True
 
     def find_edge_with_colors(self, color1, color2):
