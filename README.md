@@ -167,7 +167,5 @@ Recommended to keep these untracked:
 
 ---
 
-## License
-MIT (or your preferred license). Add a `LICENSE` file if needed.
 
 
