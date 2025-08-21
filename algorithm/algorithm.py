@@ -93,18 +93,41 @@ class RubiksCube:
         self.apply_source_transformations()
 
     def apply_source_transformations(self):
-        """Apply transformations to the source data in self.faces"""
-        # Transform U and D faces: flip rows (3→1)
-        for face in ['U', 'D']:
-            self.faces[face] = self.faces[face][::-1]
-        
-        # Transform L and R faces: flip columns within each row
-        for face in ['L', 'R']:
-            self.faces[face] = [row[::-1] for row in self.faces[face]]
-        
-        # Swap U and D faces
-        self.faces['U'], self.faces['D'] = self.faces['D'], self.faces['U']
+        """Apply per-face transforms inside algorithm (solver-local orientation).
+        Requested:
+          - U: 90° clockwise
+          - L: 90° clockwise
+          - R: 90° counterclockwise
+          - D: mirror horizontally (flip columns)
+          - F, B: unchanged
+        """
+        def rotate90_cw(grid):
+            n = len(grid)
+            res = [["" for _ in range(n)] for _ in range(n)]
+            for r in range(n):
+                for c in range(n):
+                    res[c][n - 1 - r] = grid[r][c]
+            return res
 
+        def rotate270_cw(grid):
+            # 90° counterclockwise
+            return rotate90_cw(rotate90_cw(rotate90_cw(grid)))
+
+        def flip_cols(grid):
+            return [row[::-1] for row in grid]
+
+        print("Applying source transformations...")
+        self.visualize()
+        self.faces['U'] = rotate270_cw(self.faces['U'])
+        self.faces['L'] = rotate90_cw(self.faces['L'])
+        self.faces['L'] = rotate90_cw(self.faces['L'])
+        self.faces['L'] = rotate90_cw(self.faces['L'])
+
+        
+
+        self.faces['R'] = rotate90_cw(self.faces['R'])
+        self.faces['D'] = flip_cols(self.faces['D'])
+        self.visualize()
     def display(self):
         # Optional utility to print the cube
         for face in ['U', 'F', 'R', 'L', 'B', 'D']:

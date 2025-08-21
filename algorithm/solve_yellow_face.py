@@ -77,6 +77,9 @@ def solve_yellow(cube):
     if len(yellow_edges)==0:
         side_algorithm(cube)
         yellow_edges, yellow_corners = get_yellow_positions(cube)
+        if len(controls.moves) > 500:
+            print("TOO MANY MOVES")
+            return
         solve_yellow(cube)
     if len(yellow_edges)==4 and len(yellow_corners)==0:
         count =0
@@ -142,6 +145,9 @@ def solve_yellow(cube):
             cube.visualize()
             print("afterza",face_to_use)
             yellow_edges, yellow_corners = get_yellow_positions(cube)
+            if len(controls.moves) > 500:
+                print("TOO MANY MOVES")
+                return
             solve_yellow(cube)
 
         
@@ -167,6 +173,11 @@ def solve_yellow(cube):
                 yellow_edges, yellow_corners = get_yellow_positions(cube)
                 if success:
                     return
+                if len(controls.moves) > 500:
+                    print("TOO MANY MOVES")
+                    return
+                if success:
+                    return
                 solve_yellow(cube)
                 
         
@@ -175,10 +186,16 @@ def solve_yellow(cube):
             if cube.faces['B'][0][1] =="YELLOW" and cube.faces['B'][2][1] =="YELLOW":
                 side_algorithm(cube, "R")
                 yellow_edges, yellow_corners = get_yellow_positions(cube)
+                if len(controls.moves) > 500:
+                    print("TOO MANY MOVES")
+                    return
                 solve_yellow(cube)
             elif cube.faces['B'][1][0] =="YELLOW" and cube.faces['B'][1][2] =="YELLOW":
                 side_algorithm(cube, "U")
                 yellow_edges, yellow_corners = get_yellow_positions(cube)
+                if len(controls.moves) > 500:
+                    print("TOO MANY MOVES")
+                    return
                 solve_yellow(cube)
         
     
@@ -289,13 +306,16 @@ def solve_yellow(cube):
     total_count = edge_count + corner_count
     print(f"🔍 DEBUG: Current count is {edge_count} edges + {corner_count} corners = {total_count} total (not 8)")
     print("COUNT: ",count_yellow_pieces(cube)[0]+count_yellow_pieces(cube)[1])
+    if len(controls.moves) > 500:
+        print("TOO MANY MOVES")
+        return
     solve_yellow(cube)  # Recursive call
 
 
 def side_algorithm(cube, face_to_use = None):
     if len(controls.moves) > 500:
         print("TOO MANY MOVES")
-        exit()
+        return
 
     #Do algorithm that is not really the main one but the one we use to use before the main one. 
     #We only call this when there is  at least three yellow edges on one side. In the format.
@@ -367,7 +387,7 @@ def side_algorithm(cube, face_to_use = None):
 def main_algorithm(cube, face):
     if len(controls.moves) > 500:
         print("TOO MANY MOVES")
-        exit()
+        return
     """Main algorithm for yellow face solving"""
     # TODO: Implement main algorithm
     print(f"Running main_algorithm with face: {face}")

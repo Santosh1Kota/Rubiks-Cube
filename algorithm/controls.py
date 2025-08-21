@@ -2,7 +2,27 @@
 moves_made = []
 # Separate list for unfiltered/raw moves (for debugging)
 moves = []
+def anim_move_convert():
+    move_map = {
+        "U": "L'",
+        "U'": "L",
+        "D": "R'",
+        "D'": "R",
+        "L": "F'",
+        "L'": "F",
+        "R": "B'",
+        "R'": "B",
+        "F": "U'",
+        "F'": "U",
+        "B": "D'",
+        "B'": "D",
+    }
 
+    def translate_move(m: str) -> str:
+        return move_map.get(m, m)
+    moves_animcube = [translate_move(m) for m in moves_made]
+    print("Anim moves made:", " ".join(moves_made))
+    return moves_animcube
 def add_move(move):
     """Add a move to the moves_made list with optimizations"""
     moves.append(move)  # Keep raw unfiltered moves for debugging
@@ -72,6 +92,40 @@ def add_move(move):
 def print_moves():
     """Print all moves made so far"""
     print("Moves made:", " ".join(moves_made))
+
+def export_moves() -> dict:
+    """Export current move history for APIs (raw and optimized)."""
+    # Mapping from your fixed-world moves to AnimCube3.js moves
+    move_map = {
+        "U": "L'",
+        "U'": "L",
+        "D": "R'",
+        "D'": "R",
+        "L": "F'",
+        "L'": "F",
+        "R": "B'",
+        "R'": "B",
+        "F": "U'",
+        "F'": "U",
+        "B": "D'",
+        "B'": "D",
+    }
+
+    def translate_move(m: str) -> str:
+        return move_map.get(m, m)
+    moves_animcube = [translate_move(m) for m in moves_made]
+    print("Anim moves made:", " ".join(moves_made))
+    return {
+        "moves": list(moves),
+        "moves_made": list(moves_made),
+        "moves_animcube": moves_animcube,
+        "count": len(moves_made),
+    }
+
+def clear_moves():
+    """Clear both move logs."""
+    moves_made.clear()
+    moves.clear()
 
 def rotate_face_clockwise(face_grid):
     """Rotate a 3x3 face 90 degrees clockwise."""

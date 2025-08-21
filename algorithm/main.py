@@ -1,3 +1,6 @@
+print("="*60)
+print("         STARTING RUBIK'S CUBE SOLVER")
+print("="*60)
 import algorithm
 import solve_white_cross
 import solve_white_corners
@@ -5,21 +8,61 @@ import solve_middle_layer
 import solve_yellow_face
 import solve_last
 import controls
+
 import contextlib
 import io
-# Create the cube instance
-cube = algorithm.RubiksCube('cube_colors.txt')
+import json
+import urllib.request
+import atexit
+from pathlib import Path
 
-print("="*60)
-print("         STARTING RUBIK'S CUBE SOLVER")
-print("="*60)
+
+
+# Resolve cube file path robustly (prefer algorithm/cube_colors.txt)
+script_dir = Path(__file__).resolve().parent
+default_cube_file = script_dir / 'cube_colors.txt'
+alt_cube_file = script_dir.parent / 'visualizer' / 'cube_colors.txt'
+cube_file = default_cube_file if default_cube_file.exists() else alt_cube_file
+print(f"[main.py] CWD: {Path.cwd()}")
+print(f"[main.py] Using cube file: {cube_file}")
+
+# Create the cube instance
+cube = algorithm.RubiksCube(str(cube_file))
+
+# Clear previous backend moves at start (best-effort)
+try:
+    req_clear = urllib.request.Request(
+        "http://localhost:8001/moves/clear",
+        data=b"{}",
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    urllib.request.urlopen(req_clear, timeout=5)
+except Exception:
+    pass
+
+def _post_moves():
+    try:
+        payload = json.dumps({"moves_made": controls.anim_move_convert(), "moves": controls.anim_move_convert()}).encode("utf-8")
+        req = urllib.request.Request(
+            "http://localhost:8001/moves/set",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            print("[algorithm/main.py] /moves/set status:", resp.status)
+    except Exception as e:
+        print("[algorithm/main.py] Failed to send moves:", e)
+
+# Always try to send whatever we have at process exit
+atexit.register(_post_moves)
 
 # Show initial state
+
 print("\nInitial cube state:")
 cube.visualize()
 #SCRAMBLE
-controls.R(cube); controls.U(cube); controls.R_prime(cube); controls.U_prime(cube); controls.F(cube); controls.D(cube); controls.L(cube); controls.B_prime(cube); controls.U(cube); controls.L_prime(cube); controls.F_prime(cube); controls.D_prime(cube); controls.R(cube); controls.B(cube); controls.U_prime(cube); controls.F(cube); controls.L(cube); controls.D(cube); controls.R_prime(cube); controls.B_prime(cube);
-print("\nScrambled cube:")
 cube.visualize()
 
 # Solve white cross
@@ -45,9 +88,7 @@ print("="*60)
 print("="*60)
 print("="*60)
 print("="*60)
-def silent_call(func, *args, **kwargs):
-    with contextlib.redirect_stdout(io.StringIO()):
-        return func(*args, **kwargs)
+
 print("Before corner")
 #cube.visualize()
 print("After corner")
@@ -79,18 +120,22 @@ print(len(controls.moves_made))
 print("middle layer")
 cube.visualize()
 controls.print_moves()
+
 solve_middle_layer.solve_all_middle_edges(cube)
 print("yellow face")
 if not cube.is_middle_edges_solved():
     print("Middle edges not solved")
     raise ValueError("Middle edges not solved")
 solve_yellow_face.solve_all_yellow_face(cube)
+
 if not cube.is_yellow_face_solved():
     #exit()
     # print("Yellow face not solved")
     raise ValueError("Yellow face not solved")
- 
+print("after yellow face")
+cube.visualize()
 controls.print_moves()
+
 print(" ".join(controls.moves_made))
 print(f"Total moves: {len(controls.moves_made)}")
 
@@ -124,5 +169,8 @@ print("="*60+"\n")
 print("="*60)
 cube.visualize()
 solve_last.solve(cube)
+print("after last")
 cube.visualize()
 print(f"Total moves: {len(controls.moves_made)}")
+controls.print_moves()
+_post_moves()
